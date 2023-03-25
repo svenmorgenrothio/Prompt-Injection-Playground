@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Prompt Injection Playground</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				font-family: 'Roboto', sans-serif;
+				color: white;
+			}
+
+			body {
+				background: rgba(0,0,0,0.9);
+			}
+			.container {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-direction: column;
+				height: 100vh;
+				width: 100vw;
+			}
+
+			.history-container {
+				display: flex;
+				align-items: center;
+				flex-direction: column;
+				height: 100vh;
+				width: 40vw;
+				padding: 30px
+			}
+
+			.container .content {
+				opacity: 0;
+				width: 100%;
+				padding: 20px;
+				animation: fadein 3s ease-in-out forwards;
+			}
+
+			.container .content textarea {
+				display: block;
+				width: 100%;
+				height: 80px;
+				resize: none;
+				padding: 15px;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+				outline: none;
+				color: rgba(0,0,0,0.8);
+			}
+
+			.container .content textarea#output {
+				margin-top: 40px;
+				border: 0px;
+				color: white;
+				height: 180px;
+			}
+
+			.container .content textarea#output.inactive {
+				background: gray;
+			}
+
+			.container .content textarea#output.success {
+				background: rgba(20,160,138,0.9);
+			}
+
+			.container .content textarea#output.fail {
+				background: rgba(160,20,100,0.9);
+			}
+			
+			.container .content .control-area {
+				display: flex;
+				justify-content: flex-end;
+				margin-top: 10px;
+			}
+
+			.container .content .control-area button {
+				padding: 10px 20px;
+				border: none;
+				border-radius: 5px;
+				background-color: rgb(20,160,138);
+				cursor: pointer;
+			}
+
+			.container .content .control-area select {
+				padding: 10px 20px;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+				color: rgba(0,0,0,0.8);
+				margin-right: 15px;
+			}
+
+			@media screen and (min-width: 480px) {
+				.container .content {
+					width: 90vw;
+				}
+			}
+
+			@media screen and (min-width: 768px) {
+				.container .content {
+					width: 80vw;
+				}
+			}
+			@media screen and (min-width: 1024px) {
+				.container .content {
+					width: 50vw;
+					max-width: 1024px;
+				}
+			}
+
+			@keyframes fadein {
+				0% {
+					opacity: 0;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+
+			.header {
+				text-align: center;
+				margin-bottom: 20px;
+			}
+			.header h1 {
+				margin: 0;
+			}
+		</style>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<h1>Prompt Injection Playground</h1>
+			</div>
+			<div class="content">
+				<form id = "submission">
+					<textarea name = "input"></textarea>
+					<div class = "control-area">
+						<select id = "type-selection">
+							<option value = "pre-prompt" selected>Pre-Prompt</option>
+							<!--option value = "testprompt">test</option-->
+						</select>
+						<button type = "submit">Submit</button>
+					</div>
+				</form>
+				<div class = "response">
+					<textarea id = "output" class = "inactive"></textarea>
+				</div>
+			</div>
+		</div>
+		<script>
+			const form = document.getElementById('submission');
+			const typeSelection = document.getElementById('type-selection');
+			form.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const output = document.getElementById('output');
+
+				output.className = "";
+				output.classList.add('inactive');
+				output.value = "Loading...";
+
+				const data = new FormData(form);
+				const input = data.get('input');
+				const type = typeSelection.value;
+				const url = `http://localhost:3000/api/v1.0/${type}`;
+				fetch(url, {
+					method: 'POST',
+					body: JSON.stringify({input}),
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				}).then(res => res.json()).then(data => {
+					if(data.status === 'success') {
+						output.className = "";
+						document.getElementById('output').classList.add('success');
+						output.value = data.message;
+					} else {
+						output.className = "";
+						document.getElementById('output').classList.add('fail');
+						output.value = data.message.stack;
+					}
+				});
+			});
+		</script>
+	</body>
+</html>
