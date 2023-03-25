@@ -38,3 +38,6 @@ Once done the application will be availble on `http://localhost:3000`.
 
 ## Warning!
 It is not recommended to expose the application over the internet.
+
+## Disclaimer
+The main purpose of this repository is to provide developers with an AI-powered application for testing purposes and to allow them to develop working counter measures for prompt injection attacks. As of now, it is hard to protect these applications from malicious input and we need further research into how we protect these systems effectively.
