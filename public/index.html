@@ -140,13 +140,13 @@
 			</div>
 			<div class="content">
 				<form id = "submission">
-					<textarea name = "input"></textarea>
+					<textarea placeholder="Hello, let's chat! Ask me about my capabilities and purpose." name = "input"></textarea>
 					<div class = "control-area">
 						<select id = "type-selection">
 							<option value = "pre-prompt" selected>Pre-Prompt</option>
 							<!--option value = "testprompt">test</option-->
 						</select>
-						<button type = "submit">Submit</button>
+						<button id = "submit-button" type = "submit">Submit</button>
 					</div>
 				</form>
 				<div class = "response">
@@ -157,6 +157,13 @@
 		<script>
 			const form = document.getElementById('submission');
 			const typeSelection = document.getElementById('type-selection');
+			form.addEventListener('keypress', (e) => {
+				// submit form if enter and command or ctrl is pressed
+				if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+					e.preventDefault()
+					document.getElementById('submit-button').click();
+				}
+			})
 			form.addEventListener('submit', (e) => {
 				e.preventDefault();
 				const output = document.getElementById('output');
@@ -178,11 +185,11 @@
 				}).then(res => res.json()).then(data => {
 					if(data.status === 'success') {
 						output.className = "";
-						document.getElementById('output').classList.add('success');
+						output.classList.add('success');
 						output.value = data.message;
 					} else {
 						output.className = "";
-						document.getElementById('output').classList.add('fail');
+						output.classList.add('fail');
 						output.value = data.message.stack;
 					}
 				});
