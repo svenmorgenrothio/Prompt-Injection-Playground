@@ -13,9 +13,13 @@
 
 			body {
 				background: rgba(0,0,0,0.9);
+				z-index: 1;
 			}
 			.container {
 				display: flex;
+				padding: 20px 0px;
+				position: relative;
+				z-index: 1;
 				align-items: center;
 				justify-content: center;
 				flex-direction: column;
@@ -39,6 +43,7 @@
 				animation: fadein 3s ease-in-out forwards;
 			}
 
+			#output,
 			.container .content textarea {
 				display: block;
 				width: 100%;
@@ -51,28 +56,31 @@
 				color: rgba(0,0,0,0.8);
 			}
 
-			.container .content textarea#output {
+			#output {
+				height: auto;
 				margin-top: 40px;
 				border: 0px;
 				color: white;
-				height: 180px;
+				min-height: 20px;
+				transition: all 1s ease-in-out;
 			}
 
-			.container .content textarea#output.inactive {
+			#output.inactive {
 				background: gray;
 			}
 
-			.container .content textarea#output.success {
+			#output.success {
 				background: rgba(20,160,138,0.9);
 			}
 
-			.container .content textarea#output.fail {
+			#output.fail {
 				background: rgba(160,20,100,0.9);
 			}
 			
 			.container .content .control-area {
 				display: flex;
-				justify-content: flex-end;
+				justify-content: space-between;
+				align-items: center;
 				margin-top: 10px;
 			}
 
@@ -127,6 +135,68 @@
 			.header h1 {
 				margin: 0;
 			}
+
+			.modal {
+				position: absolute;
+				top: 0;
+				pointer-events: none;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				background: rgba(0,0,0,0.9);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-direction: column;
+				opacity: 0;
+				z-index: 9999;
+				transition: all 1s ease-in-out;
+			}
+
+			#modal-header {
+				margin-bottom: 10px;
+			}
+
+			.modal-content {
+				background: white;
+				padding: 20px;
+				border-radius: 5px;
+				opacity: 0;
+				transition: all 1s ease-in-out;
+			}
+			.modal-content * {
+				color: rgba(0,0,0,0.8)
+			}
+
+			.modal-block {
+				background-color: rgb(20,160,138);
+				color: white;
+				padding: 10px;
+				border-radius: 5px;
+				margin: 5px 0px 10px;
+			}
+
+			#modal-chatbot-purpose::first-letter {
+				text-transform: capitalize;
+			}
+
+			#modal-button {
+				padding: 10px 20px;
+				border: none;
+				border-radius: 5px;
+				background-color: rgba(160,20,100,0.9);;
+				cursor: pointer;
+				color: white;
+				margin-top: 10px;
+				float: right;
+			}
+
+			.modal.visible,
+			.modal.visible * {
+				opacity: 1;
+				pointer-events: all;
+			}
+
 		</style>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,29 +204,101 @@
 		<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 	</head>
 	<body>
+		<div class = "modal">
+			<div class = "modal-content">
+				<h1 id = "modal-header"></h1>
+				<b>Chatbot Name</b>
+				<div class = "modal-block" id = "modal-chatbot-name"></div>
+				<b>Chatbot Purpose</b>
+				<div class = "modal-block" id = "modal-chatbot-purpose"></div>
+				<b>Description</b>
+				<div class = "modal-block" id = "modal-description"></div>
+				<button id = "modal-button">Close</button>
+			</div>
+		</div>
 		<div class="container">
 			<div class="header">
 				<h1>Prompt Injection Playground</h1>
 			</div>
 			<div class="content">
 				<form id = "submission">
-					<textarea placeholder="Hello, let's chat! Ask me about my capabilities and purpose." name = "input"></textarea>
+					<textarea id = "input" _placeholder="Hello, let's chat! Ask me about my capabilities and purpose." name = "input"></textarea>
 					<div class = "control-area">
-						<select id = "type-selection">
-							<option value = "pre-prompt" selected>Pre-Prompt</option>
-							<!--option value = "testprompt">test</option-->
-						</select>
-						<button id = "submit-button" type = "submit">Submit</button>
+						<div>
+							<a id = "about" href = "#">About this test case</a>
+						</div>
+						<div>
+							<select id = "type-selection">
+								<option value = "pre-prompt" selected>Pre-Prompt</option>
+								<option value = "classifier">Text Classifier</option>
+								<!--option value = "testprompt">test</option-->
+							</select>
+							<button id = "submit-button" type = "submit">Submit</button>
+						</div>
 					</div>
 				</form>
 				<div class = "response">
-					<textarea id = "output" class = "inactive"></textarea>
+					<div id = "output" class = "inactive"></textarea>
 				</div>
 			</div>
 		</div>
 		<script>
 			const form = document.getElementById('submission');
 			const typeSelection = document.getElementById('type-selection');
+			const about = document.getElementById('about');
+			const modal = document.querySelector('.modal');
+			const modalButton = document.getElementById('modal-button');
+			const modalHeader = document.getElementById('modal-header');
+			const modalDescription = document.getElementById('modal-description');
+			const modalChatbotName = document.getElementById('modal-chatbot-name');
+			const modalChatbotPurpose = document.getElementById('modal-chatbot-purpose');
+			const promptTypes = {
+				"pre-prompt": {
+					name: "Pre-Prompt",
+					endpoint: "pre-prompt",
+					description: "There is a simple pre-prompt implemented as a system message.<br />It gives the chatbot secret instructions about who it is and what it is capable of.",
+					chatbot: {
+						name: "RaccoonGPT",
+						purpose: "provide useful facts about Raccoons"
+					}
+				},
+				"classifier": {
+					name: "Text Classifier",
+					endpoint: "classifier",
+					description: "Additionally to the secret rules, there is a prior call to ChatGPT.<br>In that call it will ask it to judge, whether the prompt is about the chatbot's topic.",
+					chatbot: {
+						name: "HealthAssistant3001",
+						purpose: "provide you with facts about healthy eating."
+					}
+				}
+			}
+
+			function initializePromptTypes(prompt="pre-prompt") {
+				const promptType = promptTypes[prompt];
+				const greetings = [
+					`Hi! I'm ${promptType.chatbot.name}. I am here to ${promptType.chatbot.purpose}.`,
+					`My name is ${promptType.chatbot.name}. Just ask me and I can ${promptType.chatbot.purpose}!`,
+					`Do you need someone to ${promptType.chatbot.purpose}? My name is ${promptType.chatbot.name} and I am here to help.`,
+				];
+
+				const input = document.getElementById('input');
+				input.placeholder = greetings[Math.floor(Math.random() * greetings.length)];
+
+				modalHeader.innerText = `${promptType.name} Case`;
+				modalDescription.innerHTML = promptType.description;
+				modalChatbotName.innerText = promptType.chatbot.name;
+				modalChatbotPurpose.innerText = promptType.chatbot.purpose;
+				about.innerText = `About ${promptType.chatbot.name}`;
+			}
+
+			typeSelection.addEventListener('change', (e) => {
+				initializePromptTypes(e.target.value);
+				output.className = "";
+				output.classList.add('inactive')
+				output.innerText = "";
+				input.value = "";
+			})
+
 			form.addEventListener('keypress', (e) => {
 				// submit form if enter and command or ctrl is pressed
 				if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -170,12 +312,12 @@
 
 				output.className = "";
 				output.classList.add('inactive');
-				output.value = "Loading...";
+				output.innerText = "Loading...";
 
 				const data = new FormData(form);
 				const input = data.get('input');
 				const type = typeSelection.value;
-				const url = `http://localhost:3000/api/v1.0/${type}`;
+				const url = `http://localhost:3000/api/v1.0/${promptTypes[type].endpoint}`;
 				fetch(url, {
 					method: 'POST',
 					body: JSON.stringify({input}),
@@ -186,14 +328,43 @@
 					if(data.status === 'success') {
 						output.className = "";
 						output.classList.add('success');
-						output.value = data.message;
+						output.innerText = data.message;
 					} else {
 						output.className = "";
 						output.classList.add('fail');
-						output.value = data.message.stack;
+						output.innerText = data.message.stack;
 					}
-				});
+				}).catch(e => {
+					output.className = "";
+					output.classList.add('fail');
+					output.innerText = e;
+				})
 			});
+
+			about.addEventListener('click', (e) => {
+				e.preventDefault();
+				showModal();
+			});
+
+			modal.addEventListener('click', (e) => {
+				if(e.target === modal) {
+					hideModal();
+				}
+			});
+
+			modalButton.addEventListener('click', (e) => {
+				hideModal();
+			});
+
+			function showModal() {
+				modal.classList.add('visible');
+			}
+
+			function hideModal() {
+				modal.classList.remove('visible');
+			}
+
+			initializePromptTypes();
 		</script>
 	</body>
 </html>
