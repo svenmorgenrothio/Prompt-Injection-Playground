@@ -231,6 +231,7 @@
 							<select id = "type-selection">
 								<option value = "pre-prompt" selected>Pre-Prompt</option>
 								<option value = "classifier">Text Classifier</option>
+								<option value = "input-deny-list">Deny List (Input)</option>
 								<!--option value = "testprompt">test</option-->
 							</select>
 							<button id = "submit-button" type = "submit">Submit</button>
@@ -268,7 +269,16 @@
 					description: "Additionally to the secret rules, there is a prior call to ChatGPT.<br>In that call it will ask it to judge, whether the prompt is about the chatbot's topic.",
 					chatbot: {
 						name: "HealthAssistant3001",
-						purpose: "provide you with facts about healthy eating."
+						purpose: "provide you with facts about healthy eating"
+					}
+				},
+				"input-deny-list": {
+					name: "Deny List (Input)",
+					endpoint: "input-deny-list",
+					description: "Apart from the usal rules, the moderation is done strictly by checking for forbidden keywords in the input.",
+					chatbot: {
+						name: "ScotBot",
+						purpose: "provide you with facts about Scotland with a Scottish accent"
 					}
 				}
 			}

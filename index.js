@@ -4,7 +4,8 @@ const bodyParser = require('body-parser');
 const {
 	prePrompt,
 	classifierPrePrompt,
-	classifierModerationPrompt
+	classifierModerationPrompt,
+	inputDenyListPrePrompt
 } = require('./prompts.js');
 require("dotenv").config();
 
@@ -33,6 +34,40 @@ app.post('/api/v1.0/pre-prompt', (req, res) => {
 			{ role: "system", content: prePrompt },
 			{ role: "user", content: prompt }
 		]
+	})
+	completion.then((data) => {
+		console.log(data)
+		console.log(data.data?.choices?.[0]?.message?.content)
+		res.json({ status: 'success', message: data.data?.choices?.[0]?.message?.content });
+	}).catch((err) => {
+		console.error(err)
+		console.log(`${prePrompt}${prompt}`)
+		res.json({ status: 'error', message: err });
+	})
+})
+
+app.post('/api/v1.0/input-deny-list', (req, res) => {
+	const prompt = req.body.input;
+	const denyList = [
+		"prompt",
+		"rules",
+		"secret",
+		"code name",
+		"internal",
+	];
+
+	const lowerCasePrompt = prompt.toLowerCase();
+	for (const forbiddenWord of denyList) {
+		if (lowerCasePrompt.includes(forbiddenWord))
+			return res.json({ status: 'error', message: { stack: "Input contains a forbidden word." } });
+	}
+
+	const completion = openai.createChatCompletion({
+		model: "gpt-3.5-turbo",
+		messages: [
+			{ role: "system", content: inputDenyListPrePrompt },
+			{ role: "user", content: prompt }
+		],
 	})
 	completion.then((data) => {
 		console.log(data)

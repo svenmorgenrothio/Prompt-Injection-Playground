@@ -15,6 +15,11 @@ A request to the chatbot leads to two requests to ChatGPT. The first one contain
 
 If the response is true, the second request will initialize the actual chat bot and provide it with the user input. The rules and code name are protected and the chat bot will refuse to provide them. It needs to be tricked in order to give them to the user.
 
+### 3. Input filter
+The chatbot has about the same rules as the Simple Pre-Prompt test case. It is instructed to keep its rules and code name secret and should also prevent anyone from modifying them.
+
+On top of that there is a simple input filter in place, aiming to prevent an attacker from tricking the bot into disclosing its rules, simply by rejecting input if keywords such as "rules" or "internal" are detected.
+
 ## Setup
 ### Overview
 
