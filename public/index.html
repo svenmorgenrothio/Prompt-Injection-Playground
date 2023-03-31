@@ -327,7 +327,7 @@
 				const data = new FormData(form);
 				const input = data.get('input');
 				const type = typeSelection.value;
-				const url = `http://localhost:3000/api/v1.0/${promptTypes[type].endpoint}`;
+				const url = `/api/v1.0/${promptTypes[type].endpoint}`;
 				fetch(url, {
 					method: 'POST',
 					body: JSON.stringify({input}),
